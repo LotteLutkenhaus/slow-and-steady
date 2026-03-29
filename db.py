@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 
 import psycopg2
 
@@ -9,8 +10,13 @@ log = logging.getLogger(__name__)
 REQUIRED_TABLES = {"device_names", "training_sessions"}
 
 
+@contextmanager
 def get_connection(database_url: str):
-    return psycopg2.connect(database_url)
+    conn = psycopg2.connect(database_url)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def check_tables(conn) -> None:
