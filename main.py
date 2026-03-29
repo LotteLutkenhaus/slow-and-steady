@@ -30,12 +30,11 @@ def poll_milon():
         email=get_secret("milon-email"),
         password=get_secret("milon-password"),
     )
-    training_id  = get_secret("milon-training-id")
     database_url = get_secret("neon-database-url")
 
     # 2. Fetch from Milon API
     catalogue = client.fetch_device_names()
-    sessions = client.fetch_training_stats(training_id)
+    sessions = client.fetch_training_stats()
 
     # 3. Parse into DB rows
     device_name_rows = parse_device_names(catalogue)
