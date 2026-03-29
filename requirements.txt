@@ -1,6 +1,5 @@
 requests
 psycopg2-binary
-pydantic
-python-dotenv
+pydantic>=2.0,<3
 google-cloud-secret-manager
 functions-framework
