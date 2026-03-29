@@ -15,8 +15,29 @@ from pydantic import BaseModel, Field
 # Milon API response models
 # ---------------------------------------------------------------------------
 
+class MilonBaseModel(BaseModel):
+    """
+    Base model with common config for all Milon API responses.
+    """
 
-class DeviceInfo(BaseModel):
+    model_config = {"populate_by_name": True}
+
+
+class LoginUserData(MilonBaseModel):
+    studio_id: int = Field(alias="sid")
+
+
+class LoginResponse(MilonBaseModel):
+    """
+    Response body from POST /api/user/login
+    """
+
+    user_id: str = Field(alias="id")
+    ttl: int
+    d: LoginUserData
+
+
+class DeviceInfo(MilonBaseModel):
     """
     Entry from the device name catalogue (GET /api/devices/en_GB)
     """
@@ -25,10 +46,8 @@ class DeviceInfo(BaseModel):
     device_type: str | None = Field(default=None, alias="type")
     muscle_group: str | None = Field(default=None, alias="mg")
 
-    model_config = {"populate_by_name": True}
 
-
-class DeviceRecord(BaseModel):
+class DeviceRecord(MilonBaseModel):
     """
     Per-machine record within a training session
     """
@@ -42,19 +61,15 @@ class DeviceRecord(BaseModel):
     actid: str | None = None
     ngid: int | None = None
 
-    model_config = {"populate_by_name": True}
 
-
-class TrainingInfo(BaseModel):
+class TrainingInfo(MilonBaseModel):
     """Top-level metadata for a single training session."""
 
     timestamp: int = Field(alias="t")
     iteration: int | None = None
 
-    model_config = {"populate_by_name": True}
 
-
-class SessionData(BaseModel):
+class SessionData(MilonBaseModel):
     """A single training session as returned by the stats endpoint."""
 
     training: TrainingInfo

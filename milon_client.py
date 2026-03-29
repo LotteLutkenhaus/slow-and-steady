@@ -3,15 +3,22 @@ Milon API client.
 """
 
 import logging
+from dataclasses import dataclass
 from functools import cached_property
 
 import requests
 
-from models import DeviceInfo, SessionData
+from models import DeviceInfo, LoginResponse, SessionData
 
 log = logging.getLogger(__name__)
 
 MILON_BASE = "https://www.milonme.com/api"
+
+
+@dataclass
+class _AuthResult:
+    token: str
+    login_response: LoginResponse
 
 
 class MilonClient:
@@ -20,10 +27,9 @@ class MilonClient:
         self._email = email
         self._password = password
 
-    def token(self) -> str:
-        """
-        Authenticate with the API to obtain a session token (rs-token cookie).
-        """
+    @cached_property
+    def _auth(self) -> _AuthResult:
+        """Authenticate once and cache the result for the lifetime of this instance."""
         log.info("Authenticating with milonme.com")
         response = requests.post(
             f"{MILON_BASE}/user/login",
@@ -47,17 +53,24 @@ class MilonClient:
             raise RuntimeError("Login succeeded but rs-token was not found in response")
 
         log.info("Authentication successful")
-        return token
+        return _AuthResult(
+            token=token,
+            login_response=LoginResponse.model_validate(response.json()),
+        )
 
-    @cached_property
+    @property
+    def user_id(self) -> str:
+        return self._auth.login_response.user_id
+
+    @property
+    def studio_id(self) -> int:
+        return self._auth.login_response.d.studio_id
+
+    @property
     def headers(self) -> dict[str, str]:
-        """
-        Return the cached headers; the token has a TTL of 60 minutes so we can cache it for the
-        duration of the session.
-        """
         return {
             "x-api-key": self._api_key,
-            "Cookie": f"rs-token={self.token}",
+            "Cookie": f"rs-token={self._auth.token}",
         }
 
     def fetch_device_names(self) -> dict[int, DeviceInfo]:
@@ -78,14 +91,14 @@ class MilonClient:
             for device_id, info in response.json().items()
         }
 
-
     def fetch_training_stats(
         self,
-        studio_id: str,
-        user_id: str,
         training_id: str,
     ) -> list[SessionData]:
-        url = f"{MILON_BASE}/user/stats/premium/{studio_id}/{user_id}/{training_id}"
+        """
+        Retrieve all training sessions.
+        """
+        url = f"{MILON_BASE}/user/stats/premium/{self.studio_id}/{self.user_id}/{training_id}"
         log.info("Fetching training stats from %s", url)
         response = requests.get(
             url,
