@@ -37,21 +37,6 @@ class LoginResponse(MilonBaseModel):
     d: LoginUserData
 
 
-class ActiveTraining(MilonBaseModel):
-    """
-    Active training plan for a user
-    """
-
-    plan_id: int
-    training_id: int
-    active: bool
-    lastactive: int
-
-
-class HomeStats(MilonBaseModel):
-    active_training: ActiveTraining = Field(alias="activeTraining")
-
-
 class DeviceInfo(MilonBaseModel):
     """
     Entry from the device name catalogue (GET /api/devices/en_GB)

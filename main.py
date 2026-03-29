@@ -7,6 +7,7 @@ Designed to be called by Cloud Scheduler every 6 hours.
 
 import json
 import logging
+import os
 
 import functions_framework
 
@@ -30,11 +31,12 @@ def poll_milon():
         email=get_secret("milon-email"),
         password=get_secret("milon-password"),
     )
+    premium_id   = get_secret("milon-premium-id")
     database_url = get_secret("neon-database-url")
 
     # 2. Fetch from Milon API
     catalogue = client.fetch_device_names()
-    sessions = client.fetch_training_stats()
+    sessions = client.fetch_training_stats(premium_id)
 
     # 3. Parse into DB rows
     device_name_rows = parse_device_names(catalogue)
@@ -57,6 +59,16 @@ def poll_milon():
 
 # For local development
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    def get_secret(name: str) -> str:  # noqa: F811 — intentional override for local dev
+        env_key = "NEON_DEV_DATABASE_URL" if name == "neon-database-url" else name.upper().replace("-", "_")
+        value = os.environ.get(env_key)
+        if not value:
+            raise RuntimeError(f"Missing environment variable: {env_key}")
+        return value
+
     body, status, headers = poll_milon()
     print(f"Status: {status}")
     print(json.dumps(json.loads(body), indent=2))

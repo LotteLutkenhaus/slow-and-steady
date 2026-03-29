@@ -8,7 +8,7 @@ from functools import cached_property
 
 import requests
 
-from models import DeviceInfo, HomeStats, LoginResponse, SessionData
+from models import DeviceInfo, LoginResponse, SessionData
 
 log = logging.getLogger(__name__)
 
@@ -66,14 +66,6 @@ class MilonClient:
     def studio_id(self) -> int:
         return self._auth.login_response.d.studio_id
 
-    @cached_property
-    def training_id(self) -> int:
-        log.info("Fetching active training plan ID")
-        url = f"{MILON_BASE}/user/stats/home/{self.studio_id}/{self.user_id}"
-        response = requests.get(url, headers=self.headers, timeout=30)
-        response.raise_for_status()
-        return HomeStats.model_validate(response.json()).active_training.training_id
-
     @property
     def headers(self) -> dict[str, str]:
         return {
@@ -99,11 +91,11 @@ class MilonClient:
             for device_id, info in response.json().items()
         }
 
-    def fetch_training_stats(self) -> list[SessionData]:
+    def fetch_training_stats(self, premium_id: str) -> list[SessionData]:
         """
-        Retrieve all training sessions for the active training plan.
+        Retrieve all training sessions for the given premium ID.
         """
-        url = f"{MILON_BASE}/user/stats/premium/{self.studio_id}/{self.user_id}/{self.training_id}"
+        url = f"{MILON_BASE}/user/stats/premium/{self.studio_id}/{self.user_id}/{premium_id}"
         log.info("Fetching training stats from %s", url)
         response = requests.get(
             url,
