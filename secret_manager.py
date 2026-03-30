@@ -1,20 +1,30 @@
 """
 Secret Manager access.
 
-All secrets are fetched from Google Secret Manager using the GCP project ID
-from the GOOGLE_CLOUD_PROJECT environment variable (set automatically in
-Cloud Functions). Results are cached in memory for the lifetime of the
-function instance so subsequent invocations in the same instance don't re-fetch.
+All secrets are fetched from Google Secret Manager. The GCP project ID is
+resolved from the GOOGLE_CLOUD_PROJECT environment variable if set, otherwise
+derived from the application default credentials (which works automatically in
+Cloud Functions 2nd gen and locally after `gcloud auth application-default login`).
 
-For local development, run `gcloud auth application-default login` once.
-get_secret() will then reach Secret Manager with your personal credentials.
+Results are cached in memory for the lifetime of the function instance so
+subsequent invocations in the same instance don't re-fetch.
 """
 
 import os
 
+import google.auth
 from google.cloud import secretmanager
 
 _cache: dict[str, str] = {}
+
+
+def _project_id() -> str:
+    if project_id := os.environ.get("GOOGLE_CLOUD_PROJECT"):
+        return project_id
+    _, project_id = google.auth.default()
+
+    assert project_id, "Could not determine GCP project ID from environment or credentials"
+    return project_id
 
 
 def get_secret(name: str) -> str:
@@ -29,7 +39,7 @@ def get_secret(name: str) -> str:
     if name in _cache:
         return _cache[name]
 
-    project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
+    project_id = _project_id()
     client = secretmanager.SecretManagerServiceClient()
     resource_name = f"projects/{project_id}/secrets/{name}/versions/latest"
     response = client.access_secret_version(request={"name": resource_name})
