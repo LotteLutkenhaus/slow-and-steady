@@ -1,0 +1,5 @@
+pre-commit
+ruff
+mypy
+types-requests
+types-psycopg2
