@@ -38,7 +38,7 @@ def _prev_yymm(yymm: str) -> str:
 
 
 @functions_framework.http
-def poll_milon():
+def poll_milon(request):
     log.info("--- Polling starting ---")
 
     # 1. Load secrets
