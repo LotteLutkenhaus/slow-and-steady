@@ -9,13 +9,13 @@ import json
 import logging
 import os
 from datetime import datetime
-from secrets import get_secret
 
 import functions_framework
 
 import db
 from milon_client import MilonClient
 from parser import parse_device_names, parse_sessions
+from secret_manager import get_secret
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
