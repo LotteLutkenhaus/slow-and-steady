@@ -1,0 +1,65 @@
+steps:
+  - name: "python:3.12"
+    id: install-dev-deps
+    entrypoint: pip
+    args: ["install", "-r", "requirements-dev.txt"]
+
+  - name: "python:3.12"
+    id: ruff-lint
+    entrypoint: ruff
+    args: ["check", "."]
+
+  - name: "python:3.12"
+    id: ruff-format
+    entrypoint: ruff
+    args: ["format", "--check", "."]
+
+  - name: "python:3.12"
+    id: mypy
+    entrypoint: mypy
+    args: ["."]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - functions
+      - deploy
+      - poll_milon
+      - --gen2
+      - --runtime=python312
+      - --trigger-http
+      - --allow-unauthenticated
+      - --region=europe-west4
+      - --source=.
+      - --entry-point=poll_milon
+      - --project=$PROJECT_ID
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: schedule
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        FUNCTION_URL=$(gcloud functions describe poll_milon \
+          --region=europe-west4 --gen2 --format="value(serviceConfig.uri)")
+
+        if gcloud scheduler jobs describe poll-milon-scheduler \
+            --location=europe-west4 &>/dev/null; then
+          gcloud scheduler jobs update http poll-milon-scheduler \
+            --location=europe-west4 \
+            --schedule="0 */6 * * *" \
+            --uri="$$FUNCTION_URL" \
+            --http-method=GET \
+            --time-zone="Europe/Amsterdam"
+        else
+          gcloud scheduler jobs create http poll-milon-scheduler \
+            --location=europe-west4 \
+            --schedule="0 */6 * * *" \
+            --uri="$$FUNCTION_URL" \
+            --http-method=GET \
+            --time-zone="Europe/Amsterdam"
+        fi
+
+options:
+  logging: CLOUD_LOGGING_ONLY
