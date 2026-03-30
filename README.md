@@ -1,8 +1,9 @@
 # Slow and Steady
 
-The Milon Me app is not the best way to track progress. This project is part of a pipeline to 
-retrieve data from the Milon API, store it in a Neon PostgreSQL database, and eventually use it for
-analysis and visualization in a dashboard. 
+For Milon circuit training, the Milon Me app is not the best way to track progress. It contains 
+mostly aggregated statistics that make it hard to see in which way you are progressing. This project
+is part of a pipeline to retrieve data from the Milon API, store it in a Neon PostgreSQL database, 
+and eventually use it for analysis and visualization in a dashboard. 
 
 This repo contais a Google Cloud function that polls the Milon API every 6 hours, retrieves training
 data, and upserts it into the database. 
