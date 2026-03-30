@@ -8,6 +8,7 @@ Designed to be called by Cloud Scheduler every 6 hours.
 import json
 import logging
 import os
+from datetime import datetime
 
 import functions_framework
 
@@ -18,6 +19,22 @@ from secrets import get_secret
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
+
+
+def _current_yymm() -> str:
+    """
+    We need to provide the year and month to fetch data for in this format: YYMM, e.g. "2603" for
+    March 2026.
+    """
+    now = datetime.now()
+    return f"{now.year % 100:02d}{now.month:02d}"
+
+
+def _prev_yymm(yymm: str) -> str:
+    year, month = int(yymm[:2]), int(yymm[2:])
+    if month == 1:
+        return f"{year - 1:02d}12"
+    return f"{year:02d}{month - 1:02d}"
 
 
 @functions_framework.http
@@ -31,27 +48,46 @@ def poll_milon():
         email=get_secret("milon-email"),
         password=get_secret("milon-password"),
     )
-    premium_id   = get_secret("milon-premium-id")
     database_url = get_secret("neon-database-url")
 
-    # 2. Fetch from Milon API
+    # 2. Fetch device catalogue once
     catalogue = client.fetch_device_names()
-    sessions = client.fetch_training_stats(premium_id)
 
-    # 3. Parse into DB rows
-    device_name_rows = parse_device_names(catalogue)
-    training_session_rows = parse_sessions(sessions, catalogue)
+    # 3. Walk backwards month by month to retrieve training sessions, upserting the DB as we go
+    total_sessions = 0
+    total_inserted = 0
+    total_skipped = 0
+    yymm = _current_yymm()
 
-    # 4. Upsert to database
     with db.get_connection(database_url) as conn:
         db.check_tables(conn)
-        db.upsert_device_names(conn, device_name_rows)
-        inserted, skipped = db.upsert_training_rows(conn, training_session_rows)
+        db.upsert_device_names(conn, parse_device_names(catalogue))
+
+        while True:
+            log.info("Fetching month %s", yymm)
+            sessions = client.fetch_training_stats(yymm)
+
+            if not sessions:
+                log.info("No sessions returned for %s, stopping", yymm)
+                break
+
+            rows = parse_sessions(sessions, catalogue)
+            inserted, skipped = db.upsert_training_rows(conn, rows)
+
+            total_sessions += len(sessions)
+            total_inserted += inserted
+            total_skipped += skipped
+
+            if inserted == 0:
+                log.info("No new rows for %s — already synced, stopping", yymm)
+                break
+
+            yymm = _prev_yymm(yymm)
 
     result = {
-        "sessions_found": len(sessions),
-        "rows_upserted": inserted,
-        "rows_skipped": skipped,
+        "sessions_found": total_sessions,
+        "rows_upserted": total_inserted,
+        "rows_skipped": total_skipped,
     }
     log.info("--- Polling done: %s ---", result)
     return (json.dumps(result), 200, {"Content-Type": "application/json"})

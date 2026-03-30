@@ -8,7 +8,7 @@ from functools import cached_property
 
 import requests
 
-from models import DeviceInfo, LoginResponse, SessionData
+from models import DeviceInfo, LoginResponse, SessionData, StatsResponse
 
 log = logging.getLogger(__name__)
 
@@ -91,11 +91,11 @@ class MilonClient:
             for device_id, info in response.json().items()
         }
 
-    def fetch_training_stats(self, premium_id: str) -> list[SessionData]:
+    def fetch_training_stats(self, yymm: str) -> list[SessionData]:
         """
-        Retrieve all training sessions for the given premium ID.
+        Retrieve all training sessions for the given month (YYMM format, e.g. "2603").
         """
-        url = f"{MILON_BASE}/user/stats/premium/{self.studio_id}/{self.user_id}/{premium_id}"
+        url = f"{MILON_BASE}/user/stats/premium/{self.studio_id}/{self.user_id}/{yymm}"
         log.info("Fetching training stats from %s", url)
         response = requests.get(
             url,
@@ -104,6 +104,6 @@ class MilonClient:
         )
         response.raise_for_status()
 
-        sessions = [SessionData.model_validate(s) for s in response.json()]
+        sessions = StatsResponse.model_validate(response.json()).stats
         log.info("Received %d session(s)", len(sessions))
         return sessions

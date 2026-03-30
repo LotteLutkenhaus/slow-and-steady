@@ -28,9 +28,7 @@ class LoginUserData(MilonBaseModel):
 
 
 class LoginResponse(MilonBaseModel):
-    """
-    Response body from POST /api/user/login
-    """
+    """Response body from POST /api/user/login"""
 
     user_id: str = Field(alias="id")
     ttl: int
@@ -38,9 +36,7 @@ class LoginResponse(MilonBaseModel):
 
 
 class DeviceInfo(MilonBaseModel):
-    """
-    Entry from the device name catalogue (GET /api/devices/en_GB)
-    """
+    """Entry from the device name catalogue (GET /api/devices/en_GB)"""
 
     name: str | None = None
     device_type: str | None = Field(default=None, alias="type")
@@ -48,9 +44,7 @@ class DeviceInfo(MilonBaseModel):
 
 
 class DeviceRecord(MilonBaseModel):
-    """
-    Per-machine record within a training session
-    """
+    """Per-machine record within a training session"""
 
     device_id: int = Field(alias="id")
     timestamp: int = Field(alias="t")
@@ -74,6 +68,12 @@ class SessionData(MilonBaseModel):
 
     training: TrainingInfo
     devices: list[DeviceRecord] = Field(default_factory=list)
+
+
+class StatsResponse(MilonBaseModel):
+    """Top-level response from GET /api/user/stats/premium/..."""
+
+    stats: list[SessionData]
 
 
 # ---------------------------------------------------------------------------
