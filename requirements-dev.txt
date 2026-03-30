@@ -1,5 +1,5 @@
 pre-commit
-ruff
+ruff==0.15.8
 mypy
 types-requests
 types-psycopg2
