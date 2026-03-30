@@ -93,9 +93,6 @@ Create each secret once. The function always reads the `latest` version.
 echo -n "value" | gcloud secrets create milon-email          --data-file=-
 echo -n "value" | gcloud secrets create milon-password       --data-file=-
 echo -n "value" | gcloud secrets create milon-api-key        --data-file=-
-echo -n "value" | gcloud secrets create milon-user-id        --data-file=-
-echo -n "value" | gcloud secrets create milon-studio-id      --data-file=-
-echo -n "value" | gcloud secrets create milon-training-id    --data-file=-
 echo -n "value" | gcloud secrets create neon-database-url    --data-file=-
 ```
 
