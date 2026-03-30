@@ -46,7 +46,7 @@ class MilonClient:
         for part in response.headers.get("Set-Cookie", "").split(";"):
             part = part.strip()
             if part.startswith("rs-token="):
-                token = part[len("rs-token="):]
+                token = part[len("rs-token=") :]
                 break
 
         if not token:

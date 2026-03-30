@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from models import DeviceInfo, DeviceRecord, SessionData, DeviceNameRow, TrainingSessionRow
+from models import DeviceInfo, DeviceNameRow, DeviceRecord, SessionData, TrainingSessionRow
 
 log = logging.getLogger(__name__)
 
@@ -56,20 +56,22 @@ def parse_sessions(
             info = catalogue.get(device.device_id)
             circuit = actid_to_circuit.get(device.actid or "", 1)
 
-            rows.append(TrainingSessionRow(
-                session_ts=session_ts,
-                iteration=session.training.iteration,
-                device_id=device.device_id,
-                device_name=info.name if info else None,
-                muscle_group=info.muscle_group if info else None,
-                circuit=circuit,
-                concentric_weight=device.concentric_weight,
-                eccentric_weight=device.eccentric_weight,
-                quality_score=device.quality_score,
-                reps=device.reps,
-                actid=device.actid,
-                ngid=device.ngid,
-            ))
+            rows.append(
+                TrainingSessionRow(
+                    session_ts=session_ts,
+                    iteration=session.training.iteration,
+                    device_id=device.device_id,
+                    device_name=info.name if info else None,
+                    muscle_group=info.muscle_group if info else None,
+                    circuit=circuit,
+                    concentric_weight=device.concentric_weight,
+                    eccentric_weight=device.eccentric_weight,
+                    quality_score=device.quality_score,
+                    reps=device.reps,
+                    actid=device.actid,
+                    ngid=device.ngid,
+                )
+            )
 
     log.info("Parsed %d row(s) from %d session(s)", len(rows), len(sessions))
     return rows

@@ -9,13 +9,13 @@ import json
 import logging
 import os
 from datetime import datetime
+from parser import parse_device_names, parse_sessions
+from secrets import get_secret
 
 import functions_framework
 
 import db
 from milon_client import MilonClient
-from parser import parse_device_names, parse_sessions
-from secrets import get_secret
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
@@ -96,10 +96,16 @@ def poll_milon():
 # For local development
 if __name__ == "__main__":
     from dotenv import load_dotenv
+
     load_dotenv()
 
-    def get_secret(name: str) -> str:  # noqa: F811 — intentional override for local dev
-        env_key = "NEON_DEV_DATABASE_URL" if name == "neon-database-url" else name.upper().replace("-", "_")
+    # Override intentionally for local development
+    def get_secret(name: str) -> str:  # noqa: F811
+        env_key = (
+            "NEON_DEV_DATABASE_URL"
+            if name == "neon-database-url"
+            else name.upper().replace("-", "_")
+        )
         value = os.environ.get(env_key)
         if not value:
             raise RuntimeError(f"Missing environment variable: {env_key}")

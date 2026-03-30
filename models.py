@@ -10,10 +10,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Milon API response models
 # ---------------------------------------------------------------------------
+
 
 class MilonBaseModel(BaseModel):
     """

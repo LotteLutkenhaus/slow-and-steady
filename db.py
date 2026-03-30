@@ -73,20 +73,23 @@ def upsert_training_rows(conn, rows: list[TrainingSessionRow]) -> tuple[int, int
     skipped = 0
     with conn.cursor() as cur:
         for row in rows:
-            cur.execute(sql, (
-                row.session_ts,
-                row.iteration,
-                row.device_id,
-                row.device_name,
-                row.muscle_group,
-                row.circuit,
-                row.concentric_weight,
-                row.eccentric_weight,
-                row.quality_score,
-                row.reps,
-                row.actid,
-                row.ngid,
-            ))
+            cur.execute(
+                sql,
+                (
+                    row.session_ts,
+                    row.iteration,
+                    row.device_id,
+                    row.device_name,
+                    row.muscle_group,
+                    row.circuit,
+                    row.concentric_weight,
+                    row.eccentric_weight,
+                    row.quality_score,
+                    row.reps,
+                    row.actid,
+                    row.ngid,
+                ),
+            )
             if cur.rowcount == 1:
                 inserted += 1
             else:
