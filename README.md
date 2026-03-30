@@ -1,8 +1,11 @@
 # Slow and Steady
 
-A Google Cloud Function (2nd gen, Python 3.12) that polls the milonme.com fitness API and stores training data in a Neon PostgreSQL database.
+The Milon Me app is not the best way to track progress. This project is part of a pipeline to 
+retrieve data from the Milon API, store it in a Neon PostgreSQL database, and eventually use it for
+analysis and visualization in a dashboard. 
 
-**Pipeline:** authenticate → fetch device catalogue → fetch training sessions → parse → upsert
+This repo contais a Google Cloud function that polls the Milon API every 6 hours, retrieves training
+data, and upserts it into the database. 
 
 ---
 
