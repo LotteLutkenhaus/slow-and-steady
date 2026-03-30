@@ -1,23 +1,14 @@
 steps:
   - name: "python:3.12"
-    id: install-dev-deps
-    entrypoint: pip
-    args: ["install", "-r", "requirements-dev.txt"]
-
-  - name: "python:3.12"
-    id: ruff-lint
-    entrypoint: ruff
-    args: ["check", "."]
-
-  - name: "python:3.12"
-    id: ruff-format
-    entrypoint: ruff
-    args: ["format", "--check", "."]
-
-  - name: "python:3.12"
-    id: mypy
-    entrypoint: mypy
-    args: ["."]
+    id: lint-and-typecheck
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pip install -r requirements-dev.txt
+        ruff check .
+        ruff format --check .
+        mypy .
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: deploy
